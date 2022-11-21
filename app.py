@@ -45,16 +45,16 @@ model.make_predict_function()  #Necessary for imagenet weights
 
 
 def model_predict(img_path,model):
-		img = image.load_img(img_path,target_size=(299,299))
-		# Preprocessing the image
-		x = image.img_to_array(img)
-		x = np.expand_dims(x,axis=0)
-		# Be careful how your trained model deals with the input
-		# otherwise, it won't make correct prediction!
-		x = preprocess_input(x)
-		
-		preds = model.predict(x)
-		return preds
+	img = image.load_img(img_path,target_size=(299,299))
+	# Preprocessing the image
+	x = image.img_to_array(img)
+	x = np.expand_dims(x,axis=0)
+	# Be careful how your trained model deals with the input
+	# otherwise, it won't make correct prediction!
+	x = preprocess_input(x)
+
+	preds = model.predict(x)
+	return preds
 
 
 @app.route('/',methods = ['GET'])
@@ -78,9 +78,28 @@ def upload():
 
 		# Process your result for human
 		# pred_class = pred.argmax(axis=-1)
-		pred_class = decode_predictions(preds,top=1)
-		result = str(pred_class[0][0][1])
-		return render_template('./predict.html',result=result)
+		decoded_predictions = decode_predictions(preds, top=5)
+		
+		#interpret the decoded results
+		def interpret_results():
+			#search_value is the name of the textbox input on frontend
+			search_query = request.form["search_value"]
+			for i in range(len(decoded_predictions)):
+			    class_tupple = decoded_predictions[i]
+			    _id, class_, prob_ = class_tupple[0]
+			    image_name = i
+			    if search_query_value == "":
+				pass
+			    elif search_query_value == class_:
+				image_name = i
+				break
+			return image_name, image_class
+		
+		image_name, image_class = interpret_results() 
+		
+# 		result = str(pred_class[0][0][1])
+# 		return render_template('./predict.html',result=result)
+		return render_template("./predict.html", image_name=image_name, image_class=image_class)
 	else:
 		return render_template('./index.html')
 
